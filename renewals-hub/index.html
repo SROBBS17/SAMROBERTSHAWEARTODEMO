@@ -1,0 +1,690 @@
+<title>Renewals Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: work-queue tool. Signal strip + book table on the left, account file slides in on the right; composer is a full overlay. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --sunk: #eceef2;
+  --line: #dde1e8;
+  --fg: #18202c;
+  --muted: #5d6779;
+  --accent: #0e6e66;
+  --accent-soft: #dff1ee;
+  --on-accent: #ffffff;
+  --high: #b42318; --high-soft: #fde7e5;
+  --med: #a15c07;  --med-soft: #fdf0d9;
+  --low: #2f6b3a;  --low-soft: #e3f3e6;
+  --info: #3e4fb8; --info-soft: #e6e9fb;
+  --shadow: 0 12px 32px rgba(24, 32, 44, .14);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151c; --surface: #181d26; --sunk: #1f2531; --line: #2c3442;
+  --fg: #e7ebf2; --muted: #9aa4b5; --accent: #4cc2b5; --accent-soft: #163a37; --on-accent: #0b1714;
+  --high: #ff8a80; --high-soft: #3a1d1b; --med: #f0b35a; --med-soft: #382a14;
+  --low: #7fcf8c; --low-soft: #1b3220; --info: #9aa8ff; --info-soft: #232a4d;
+  --shadow: 0 12px 32px rgba(0,0,0,.5); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #181d26; --sunk: #1f2531; --line: #2c3442;
+  --fg: #e7ebf2; --muted: #9aa4b5; --accent: #4cc2b5; --accent-soft: #163a37; --on-accent: #0b1714;
+  --high: #ff8a80; --high-soft: #3a1d1b; --med: #f0b35a; --med-soft: #382a14;
+  --low: #7fcf8c; --low-soft: #1b3220; --info: #9aa8ff; --info-soft: #232a4d;
+  --shadow: 0 12px 32px rgba(0,0,0,.5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.45; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+.muted { color: var(--muted); }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1440px; margin: 0 auto; }
+
+/* Top bar */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 16px; padding-block: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 19px; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; }
+.brand-mark { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; color: var(--on-accent); font-size: 12px; font-family: var(--f-mono); }
+.demo-pill { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 99px; background: var(--med-soft); color: var(--med); font-weight: 600; }
+.who { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 600; font-size: 12px; }
+.sync { font-size: 12px; color: var(--muted); }
+
+main.wrap { padding-block: 20px 48px; display: grid; gap: 20px; }
+h1 { font-family: var(--f-display); font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -.015em; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-size: 17px; font-weight: 600; margin: 0; text-wrap: balance; }
+h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0; font-weight: 600; }
+.greet { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
+.greet p { margin: 4px 0 0; color: var(--muted); }
+
+/* KPI strip */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.kpi { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
+.kpi .v { font-family: var(--f-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: 12px; color: var(--muted); }
+.kpi button.v { background: none; border: 0; padding: 0; text-align: left; color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+
+/* Signals */
+.signals { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.signals-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); gap: 8px; flex-wrap: wrap; }
+.signal-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.signal { display: grid; grid-template-columns: 4px 1fr; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); background: none; border-top: 0; border-left: 0; text-align: left; }
+.signal:hover { background: var(--sunk); }
+.signal .bar { border-radius: 2px; }
+.signal .t { font-size: 13px; }
+.signal .a { font-weight: 600; }
+.signal .k { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+
+/* Book */
+.book { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
+.toolbar { display: flex; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 5px 11px; font-size: 13px; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip .c { font-family: var(--f-mono); font-size: 11px; opacity: .75; margin-left: 4px; }
+.search { margin-left: auto; border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 6px 10px; min-width: 0; width: 220px; max-width: 100%; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 980px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; background: var(--sunk); position: sticky; top: 0; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--sunk); }
+tbody tr.sel { background: var(--accent-soft); }
+td.acct { white-space: normal; min-width: 180px; }
+td.acct .n { font-weight: 600; }
+td.acct .d { font-size: 12px; color: var(--muted); }
+.r { text-align: right; }
+.pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+.pill.High { background: var(--high-soft); color: var(--high); }
+.pill.Medium { background: var(--med-soft); color: var(--med); }
+.pill.Low { background: var(--low-soft); color: var(--low); }
+.pill.neutral { background: var(--sunk); color: var(--muted); }
+.pill.info { background: var(--info-soft); color: var(--info); }
+.pill.ok { background: var(--low-soft); color: var(--low); }
+.pill.warn { background: var(--med-soft); color: var(--med); }
+.pill.crit { background: var(--high-soft); color: var(--high); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.days { display: grid; gap: 4px; }
+.meter { height: 4px; border-radius: 2px; background: var(--sunk); width: 64px; overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+.owners { display: flex; gap: 4px; }
+.own { font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: var(--info-soft); color: var(--info); font-family: var(--f-mono); }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+
+.bulkbar { position: sticky; bottom: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); border-radius: 0 0 var(--r) var(--r); flex-wrap: wrap; }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 13px; border-radius: 6px; font-weight: 500; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: var(--fg); }
+.btn:hover { background: var(--sunk); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; border-color: transparent; }
+.bulkbar .btn.ghost { color: var(--bg); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Account file drawer */
+.scrim { position: fixed; inset: 0; background: rgba(10, 14, 20, .35); z-index: 20; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); z-index: 21; box-shadow: var(--shadow); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer-head { background: var(--surface); border-bottom: 1px solid var(--line); padding: 16px 20px; display: grid; gap: 10px; }
+.drawer-head .row { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.drawer-head .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.drawer-body { overflow-y: auto; padding: 16px 20px 32px; display: grid; gap: 16px; align-content: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.src { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted); background: var(--sunk); padding: 2px 6px; border-radius: 4px; }
+.brief { font-size: 14px; line-height: 1.6; margin: 0; }
+.brief li { margin-bottom: 4px; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 16px; }
+.fact .l { font-size: 11.5px; color: var(--muted); }
+.fact .v { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 500; }
+.fact .tr { font-size: 11.5px; font-family: var(--f-mono); }
+.up { color: var(--low); } .down { color: var(--high); }
+.people { display: grid; gap: 0; }
+.person { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.person:first-child { border-top: 0; }
+.person .e { font-family: var(--f-mono); font-size: 12px; color: var(--muted); word-break: break-all; }
+.person .nm { font-weight: 600; font-size: 13.5px; }
+.flag { font-size: 11px; color: var(--med); font-weight: 600; }
+.timeline { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 52px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.timeline li:first-child { border-top: 0; }
+.timeline .when { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.score { display: flex; align-items: center; gap: 14px; }
+.ring { width: 56px; height: 56px; flex: none; }
+.ring text { font-family: var(--f-mono); font-size: 15px; fill: var(--fg); }
+.close { border: 0; background: var(--sunk); width: 32px; height: 32px; border-radius: 6px; font-size: 18px; line-height: 1; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Composer */
+.composer { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: grid; grid-template-rows: auto 1fr; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.composer-head { background: var(--surface); border-bottom: 1px solid var(--line); }
+.composer-head .wrap { display: flex; align-items: center; gap: 12px; padding-block: 12px; flex-wrap: wrap; }
+.composer-grid { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 0; }
+.queue { border-right: 1px solid var(--line); overflow-y: auto; background: var(--surface); }
+.queue button { display: grid; gap: 2px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 10px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+.queue button[aria-current="true"] { background: var(--accent-soft); }
+.queue .qn { font-weight: 600; font-size: 13.5px; display: flex; justify-content: space-between; gap: 8px; }
+.queue .qs { font-size: 12px; color: var(--muted); }
+.editor { overflow-y: auto; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 40px 24px; display: grid; gap: 14px; align-content: start; }
+.field { display: grid; gap: 6px; }
+.field label, .field .lab { font-size: 12px; font-weight: 600; color: var(--muted); }
+.recips { display: flex; flex-wrap: wrap; gap: 6px; }
+.recip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 99px; padding: 3px 4px 3px 10px; font-size: 12.5px; background: var(--surface); }
+.recip.off { opacity: .45; text-decoration: line-through; }
+.recip button { border: 0; background: var(--sunk); border-radius: 99px; width: 20px; height: 20px; font-size: 12px; line-height: 1; }
+.editor input[type="text"], .editor textarea, .editor select { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 9px 11px; }
+.editor textarea { min-height: 300px; resize: vertical; line-height: 1.55; }
+.hint { font-size: 12px; color: var(--muted); }
+.sfnote { font-family: var(--f-mono); font-size: 12px; background: var(--sunk); border-radius: 6px; padding: 10px 12px; white-space: pre-wrap; }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; z-index: 50; font-size: 13px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+
+@media (max-width: 860px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .composer-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .queue { max-height: 180px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .editor { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: slide .22s ease-out; }
+  @keyframes slide { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="brand-mark">R</span>Renewals Hub</div>
+    <span class="demo-pill" title="All accounts, people and numbers on this page are made up">Example data</span>
+    <div class="who">
+      <span class="sync">Synced from Salesforce + BigBrain · 07:00</span>
+      <span>Dana Levi</span>
+      <span class="avatar" aria-hidden="true">DL</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="greet">
+    <div>
+      <h1 id="hello">Good morning, Dana</h1>
+      <p id="sub">Your book of business, built from the accounts where you are the primary renewal owner.</p>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="startOutreach">Prepare 90-day outreach</button>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Book summary"></section>
+
+  <section class="signals" aria-labelledby="sigTitle">
+    <div class="signals-head">
+      <h2 id="sigTitle">Needs your attention</h2>
+      <span class="src">BigBrain events · Salesforce activity · last 7 days</span>
+    </div>
+    <div class="signal-list" id="signals"></div>
+  </section>
+
+  <section class="book" aria-labelledby="bookTitle">
+    <div class="toolbar">
+      <h2 id="bookTitle" style="margin-right:8px">Book of business</h2>
+      <div class="chips" id="chips" role="group" aria-label="Filter accounts"></div>
+      <input class="search" id="search" type="search" placeholder="Search account or admin" aria-label="Search accounts">
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th><input type="checkbox" id="selAll" aria-label="Select all visible accounts"></th>
+          <th>Account</th><th>Renews in</th><th class="r">ARR</th><th>Payment</th><th>Risk</th>
+          <th>Health</th><th>Outreach</th><th>Stage</th><th>Others on account</th><th class="r">Admins</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="bulkbar" id="bulk" hidden>
+      <strong id="bulkCount">0 selected</strong>
+      <button class="btn primary" id="bulkDraft">Draft emails</button>
+      <button class="btn" id="bulkCopy">Copy all admin emails</button>
+      <button class="btn ghost" id="bulkClear">Clear</button>
+    </div>
+  </section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Account file"></aside>
+
+<section class="composer" id="composer" hidden aria-label="Outreach composer">
+  <div class="composer-head">
+    <div class="wrap">
+      <button class="close" id="composerClose" aria-label="Close composer">×</button>
+      <h2 id="composerTitle">Outreach drafts</h2>
+      <label class="hint" for="tpl" style="margin-left:auto">Template</label>
+      <select id="tpl" class="btn"></select>
+    </div>
+  </div>
+  <div class="composer-grid">
+    <nav class="queue" id="queue" aria-label="Draft queue"></nav>
+    <div class="editor" id="editor"></div>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const DAY = 864e5;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const fmtDate = d => new Date(today.getTime() + d * DAY).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const money = n => '$' + n.toLocaleString('en-US');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // Example book. In the real app this comes from Snowflake (Salesforce + BigBrain tables) filtered by the signed-in RM's email.
+  const A = (o) => o;
+  const accounts = [
+    A({ id: 1, name: 'Northwind Logistics', domain: 'northwindlogistics.example', arr: 18400, seats: 60, plan: 'Enterprise', pay: 'Wire', risk: 'High', end: 41,
+      map: 28, mapPrev: 44, wap: 19, boards: [9, 41], automations: 3, ai: 4, integrations: ['Outlook'], stage: 'Renewal kickoff',
+      cadence: { state: 'followup', last: 16, touches: 1 },
+      admins: [['Priya Raman','priya.raman@northwindlogistics.example','Account admin','2d'],['Tom Hale','tom.hale@northwindlogistics.example','Admin','34d'],['ops.northwind','northwind.ops@gmail.com','Admin','90d+']],
+      power: [['Leo Grant','leo.grant@northwindlogistics.example','312 actions / wk']],
+      others: [['AE','Sara Kim','Opened expansion opp "CRM add-on" ($6,000)','3d'],['CSM','Omar Haddad','Onboarding call with ops team','21d']],
+      signals: [['crit','Usage drop','Monthly active users fell from 44% to 28% of seats'],['info','AE active','Sara Kim opened an expansion opportunity inside your renewal window']] }),
+    A({ id: 2, name: 'Halden Architects', domain: 'haldenarch.example', arr: 9200, seats: 25, plan: 'Pro', pay: 'Card', risk: 'Medium', end: 19,
+      map: 52, mapPrev: 55, wap: 40, boards: [14, 22], automations: 11, ai: 22, integrations: ['Slack','Google Drive'], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Mina Okafor','mina@haldenarch.example','Account admin','1d'],['Jonas Weber','jonas@haldenarch.example','Admin','5d']],
+      power: [], others: [],
+      signals: [['crit','Cancel on renewal','Admin selected "cancel on renewal" in the admin portal 2 days ago. No reply to outreach yet.']] }),
+    A({ id: 3, name: 'Brightwater Clinics', domain: 'brightwaterclinics.example', arr: 42000, seats: 140, plan: 'Enterprise', pay: 'Wire', risk: 'Low', end: 63,
+      map: 71, mapPrev: 66, wap: 58, boards: [88, 120], automations: 64, ai: 71, integrations: ['Teams','Salesforce','Jira'], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Grace Liu','grace.liu@brightwaterclinics.example','Account admin','today'],['Ben Ortiz','ben.ortiz@brightwaterclinics.example','Admin','3d'],['Hana Sato','hana.sato@brightwaterclinics.example','Admin','8d']],
+      power: [['Ravi Mehta','ravi.mehta@brightwaterclinics.example','540 actions / wk']],
+      others: [['AM','Elliot Shaw','QBR scheduled for next week','2d']],
+      signals: [['ok','RBR candidate','Strong adoption and AI credits at 71%. Good account for a renewal business review.'],['warn','Seats near limit','134 of 140 seats in use']] }),
+    A({ id: 4, name: 'Kestrel Foods', domain: 'kestrelfoods.example', arr: 12750, seats: 45, plan: 'Pro', pay: 'Wire', risk: 'Medium', end: 77,
+      map: 47, mapPrev: 49, wap: 31, boards: [21, 38], automations: 9, ai: 12, integrations: ['Gmail'], stage: 'Renewal kickoff',
+      cadence: { state: 'sent', last: 4, touches: 1 },
+      admins: [['Aisha Bello','aisha.bello@kestrelfoods.example','Account admin','1d'],['Marco Rossi','marco.rossi@kestrelfoods.example','Admin','12d']],
+      power: [], others: [['Partner','Bluegate Consulting','Upsell call on automations','9d']],
+      signals: [['info','Partner active','Bluegate Consulting held an upsell call 9 days ago']] }),
+    A({ id: 5, name: 'Orbis Legal', domain: 'orbislegal.example', arr: 26300, seats: 80, plan: 'Enterprise', pay: 'Wire', risk: 'High', end: 88,
+      map: 33, mapPrev: 35, wap: 22, boards: [17, 64], automations: 5, ai: 2, integrations: [], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Helen Marsh','h.marsh@orbislegal.example','Account admin','6d']],
+      power: [['Daniel Cho','d.cho@orbislegal.example','280 actions / wk'],['Ivy Patel','i.patel@orbislegal.example','190 actions / wk']],
+      others: [],
+      signals: [['warn','Only one admin','Add active users so the email reaches at least three people']] }),
+    A({ id: 6, name: 'Lumen Studios', domain: 'lumenstudios.example', arr: 7800, seats: 20, plan: 'Standard', pay: 'Wire', risk: 'Low', end: 52,
+      map: 64, mapPrev: 61, wap: 50, boards: [12, 15], automations: 18, ai: 35, integrations: ['Slack'], stage: 'Renewal proposal',
+      cadence: { state: 'replied', last: 2, touches: 1 },
+      admins: [['Chloe Park','chloe@lumenstudios.example','Account admin','today']],
+      power: [], others: [],
+      signals: [['ok','Replied','Chloe Park asked for a 2-year price. Reply waiting in Gmail.']] }),
+    A({ id: 7, name: 'Tidewell Energy', domain: 'tidewell.example', arr: 33900, seats: 110, plan: 'Enterprise', pay: 'Wire', risk: 'Medium', end: 115,
+      map: 49, mapPrev: 58, wap: 37, boards: [40, 96], automations: 22, ai: 18, integrations: ['Teams','SharePoint'], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Owen Price','owen.price@tidewell.example','Account admin','4d'],['Nadia Karim','nadia.karim@tidewell.example','Admin','2d'],['Felix Braun','felix.braun@tidewell.example','Admin','17d']],
+      power: [], others: [['AE','Sara Kim','Discovery call: Service product','12d'],['AM','Elliot Shaw','Exec sponsor intro email','30d']],
+      signals: [['warn','Usage drop','Monthly active users down 9 points in 30 days']] }),
+    A({ id: 8, name: 'Marlow & Finch', domain: 'marlowfinch.example', arr: 5400, seats: 15, plan: 'Standard', pay: 'Card', risk: 'Low', end: 33,
+      map: 58, mapPrev: 57, wap: 47, boards: [8, 10], automations: 4, ai: 9, integrations: [], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Ruth Ellis','ruth@marlowfinch.example','Account admin','3d']],
+      power: [], others: [],
+      signals: [['info','Plan change','Admin requested a move from Standard to Pro at renewal']] }),
+    A({ id: 9, name: 'Copperleaf Retail', domain: 'copperleaf.example', arr: 15600, seats: 50, plan: 'Pro', pay: 'Wire', risk: 'Low', end: 70,
+      map: 61, mapPrev: 60, wap: 44, boards: [30, 44], automations: 27, ai: 40, integrations: ['Shopify','Gmail'], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Isaac Moore','isaac.moore@copperleaf.example','Account admin','1d'],['Lena Fischer','lena.fischer@copperleaf.example','Admin','9d']],
+      power: [], others: [], signals: [] }),
+    A({ id: 10, name: 'Vantage Robotics', domain: 'vantagerobotics.example', arr: 21000, seats: 70, plan: 'Enterprise', pay: 'Wire', risk: 'High', end: 24,
+      map: 36, mapPrev: 39, wap: 25, boards: [15, 52], automations: 6, ai: 3, integrations: ['Jira'], stage: 'Renewal kickoff',
+      cadence: { state: 'followup', last: 22, touches: 2 },
+      admins: [['Kai Nakamura','kai.n@vantagerobotics.example','Account admin','11d'],['Zoe Adams','zoe.a@vantagerobotics.example','Admin','40d']],
+      power: [['Amir Saleh','amir.s@vantagerobotics.example','205 actions / wk']], others: [],
+      signals: [['crit','No reply after 2 emails','24 days to renewal. Consider a call or adding active users.']] }),
+    A({ id: 11, name: 'Ashgrove Schools Trust', domain: 'ashgrove.example', arr: 11200, seats: 40, plan: 'Pro', pay: 'Wire', risk: 'Low', end: 96,
+      map: 55, mapPrev: 53, wap: 41, boards: [25, 31], automations: 14, ai: 19, integrations: ['Google Drive'], stage: 'Pre-renewal',
+      cadence: { state: 'none', last: null, touches: 0 },
+      admins: [['Martha Quinn','m.quinn@ashgrove.example','Account admin','5d'],['Peter Lund','p.lund@ashgrove.example','Admin','2d']],
+      power: [], others: [], signals: [] }),
+    A({ id: 12, name: 'Pinecrest Hotels', domain: 'pinecresthotels.example', arr: 29500, seats: 95, plan: 'Enterprise', pay: 'Wire', risk: 'Medium', end: 58,
+      map: 50, mapPrev: 48, wap: 38, boards: [34, 60], automations: 30, ai: 26, integrations: ['Teams'], stage: 'Renewal kickoff',
+      cadence: { state: 'sent', last: 9, touches: 1 },
+      admins: [['Sofia Reyes','sofia.reyes@pinecresthotels.example','Account admin','2d'],['Arjun Das','arjun.das@pinecresthotels.example','Admin','6d'],['Emma Novak','emma.novak@pinecresthotels.example','Admin','15d']],
+      power: [], others: [['CSM','Omar Haddad','Support ticket: SSO setup','6d']], signals: [] }),
+  ];
+
+  const state = { filter: 'all', q: '', selected: new Set(), open: null, comp: null };
+
+  // ---- Derived scores (thresholds are placeholders to agree with the team)
+  const health = a => {
+    let s = a.map;
+    s += Math.max(-15, Math.min(10, (a.map - a.mapPrev)));
+    s += Math.min(15, a.automations / 3);
+    s += a.ai / 10;
+    s -= a.risk === 'High' ? 12 : a.risk === 'Medium' ? 5 : 0;
+    return Math.max(5, Math.min(99, Math.round(s)));
+  };
+  const healthBand = s => s >= 65 ? ['ok', 'Healthy'] : s >= 45 ? ['warn', 'Watch'] : ['crit', 'At risk'];
+  const rbrScore = a => {
+    let s = 0;
+    if (a.pay === 'Wire') s += 25;
+    if (a.map >= 50) s += 25;
+    if (a.boards[0] / a.boards[1] >= 0.4) s += 20;
+    if (a.automations >= 10) s += 15;
+    if (a.ai >= 20) s += 15;
+    return s;
+  };
+  const cadenceLabel = c => ({
+    none: ['neutral', 'Not contacted'],
+    sent: ['info', `Sent ${c.last}d ago`],
+    followup: ['warn', `Follow-up due · ${c.last}d`],
+    replied: ['ok', `Replied ${c.last}d ago`],
+  })[c.state];
+  const goodAdmins = a => a.admins.filter(x => x[1].endsWith('@' + a.domain));
+
+  const filters = [
+    ['all', 'All', () => true],
+    ['d90', 'Renewing ≤ 90 days', a => a.end <= 90],
+    ['notyet', 'Not contacted', a => a.cadence.state === 'none'],
+    ['followup', 'Follow-up due', a => a.cadence.state === 'followup'],
+    ['high', 'High risk', a => a.risk === 'High'],
+    ['wire', 'Wire only', a => a.pay === 'Wire'],
+  ];
+  const visible = () => {
+    const f = filters.find(x => x[0] === state.filter)[2];
+    const q = state.q.trim().toLowerCase();
+    return accounts.filter(f).filter(a => !q || a.name.toLowerCase().includes(q) || a.admins.some(x => (x[0] + x[1]).toLowerCase().includes(q)))
+      .sort((x, y) => x.end - y.end);
+  };
+
+  // ---- Render: KPIs
+  function renderKpis() {
+    const q = accounts.filter(a => a.end <= 90);
+    const arr = q.reduce((s, a) => s + a.arr, 0);
+    const due = accounts.filter(a => a.cadence.state === 'followup' || (a.cadence.state === 'none' && a.end <= 90)).length;
+    const sig = accounts.reduce((s, a) => s + a.signals.length, 0);
+    document.getElementById('kpis').innerHTML = `
+      <div class="kpi"><span class="l">Accounts renewing in 90 days</span><span class="v">${q.length}<span class="muted" style="font-size:15px"> / ${accounts.length}</span></span></div>
+      <div class="kpi"><span class="l">ARR up for renewal (90 days)</span><span class="v">${money(arr)}</span></div>
+      <div class="kpi"><span class="l">Emails to send today</span><button class="v" id="kpiDue">${due}</button></div>
+      <div class="kpi"><span class="l">Open signals</span><span class="v">${sig}</span></div>`;
+    document.getElementById('kpiDue').onclick = () => openComposer(dueToday());
+  }
+  const dueToday = () => accounts.filter(a => a.cadence.state === 'followup' || (a.cadence.state === 'none' && a.end <= 90)).sort((x, y) => x.end - y.end).map(a => a.id);
+
+  // ---- Render: signals
+  const sigColor = { crit: 'var(--high)', warn: 'var(--med)', ok: 'var(--low)', info: 'var(--info)' };
+  function renderSignals() {
+    const all = accounts.flatMap(a => a.signals.map(s => ({ a, s }))).sort((x, y) => ['crit','warn','info','ok'].indexOf(x.s[0]) - ['crit','warn','info','ok'].indexOf(y.s[0]));
+    document.getElementById('signals').innerHTML = all.map(({ a, s }) => `
+      <button class="signal" data-open="${a.id}">
+        <span class="bar" style="background:${sigColor[s[0]]}"></span>
+        <span class="t"><span class="k" style="color:${sigColor[s[0]]}">${esc(s[1])}</span><br><span class="a">${esc(a.name)}</span> · ${esc(s[2])}</span>
+      </button>`).join('');
+  }
+
+  // ---- Render: chips + table
+  function renderChips() {
+    document.getElementById('chips').innerHTML = filters.map(([k, l, f]) =>
+      `<button class="chip" data-filter="${k}" aria-pressed="${state.filter === k}">${l}<span class="c">${accounts.filter(f).length}</span></button>`).join('');
+  }
+  function renderRows() {
+    const v = visible();
+    document.getElementById('rows').innerHTML = v.map(a => {
+      const h = health(a), [hb, hl] = healthBand(h), [cc, cl] = cadenceLabel(a.cadence);
+      const pct = Math.max(4, Math.min(100, 100 - a.end / 1.2));
+      return `<tr data-open="${a.id}" class="${state.selected.has(a.id) ? 'sel' : ''}">
+        <td><input type="checkbox" data-sel="${a.id}" ${state.selected.has(a.id) ? 'checked' : ''} aria-label="Select ${esc(a.name)}"></td>
+        <td class="acct"><div class="n">${esc(a.name)}</div><div class="d">${a.plan} · ${a.seats} seats</div></td>
+        <td><div class="days"><span class="num">${a.end} days</span><span class="meter"><i style="width:${pct}%"></i></span></div></td>
+        <td class="r num">${money(a.arr)}</td>
+        <td>${a.pay === 'Wire' ? '<span class="pill neutral">Wire</span>' : '<span class="pill neutral">Card</span>'}</td>
+        <td><span class="pill ${a.risk}"><span class="dot"></span>${a.risk}</span></td>
+        <td><span class="pill ${hb}">${h} · ${hl}</span></td>
+        <td><span class="pill ${cc}">${cl}</span></td>
+        <td class="muted">${a.stage}</td>
+        <td><div class="owners">${a.others.length ? a.others.map(o => `<span class="own" title="${esc(o[1])}: ${esc(o[2])}">${o[0]}</span>`).join('') : '<span class="muted">–</span>'}</div></td>
+        <td class="r num">${goodAdmins(a).length}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="11" class="muted" style="padding:24px">No accounts match this filter.</td></tr>`;
+    document.getElementById('selAll').checked = v.length > 0 && v.every(a => state.selected.has(a.id));
+    const bulk = document.getElementById('bulk');
+    bulk.hidden = state.selected.size === 0;
+    document.getElementById('bulkCount').textContent = `${state.selected.size} selected`;
+  }
+  const renderAll = () => { renderKpis(); renderSignals(); renderChips(); renderRows(); if (state.open) renderDrawer(); };
+
+  // ---- Account file
+  function ring(v, color) {
+    const r = 24, c = 2 * Math.PI * r;
+    return `<svg class="ring" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="${r}" fill="none" stroke="var(--sunk)" stroke-width="6"/>
+      <circle cx="28" cy="28" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c * v / 100} ${c}" transform="rotate(-90 28 28)"/>
+      <text x="28" y="33" text-anchor="middle">${v}</text></svg>`;
+  }
+  function brief(a) {
+    const d = a.map - a.mapPrev, b = [];
+    b.push(`Renews ${fmtDate(a.end)} (${a.end} days). ${money(a.arr)} ARR on ${a.plan}, ${a.seats} seats, paid by ${a.pay.toLowerCase()}.`);
+    b.push(`Monthly active users are ${a.map}% of seats, ${d >= 0 ? 'up' : 'down'} ${Math.abs(d)} points on last month. ${a.boards[0]} of ${a.boards[1]} boards were active this month.`);
+    if (a.automations < 8) b.push(`Only ${a.automations} automations running. Ask what manual steps the team still does each week.`);
+    if (a.ai < 10) b.push(`AI credits barely used (${a.ai}%). Good opening to show AI features before price comes up.`);
+    if (a.others.length) b.push(`${a.others.map(o => `${o[1]} (${o[0]})`).join(' and ')} also worked this account recently. Check in with them before you reach out.`);
+    if (goodAdmins(a).length < 3) b.push(`Only ${goodAdmins(a).length} admin${goodAdmins(a).length === 1 ? '' : 's'} on the company domain. Add active users so at least three people get the email.`);
+    return b;
+  }
+  function renderDrawer() {
+    const a = accounts.find(x => x.id === state.open); if (!a) return;
+    const h = health(a), [hb, hl] = healthBand(h), r = rbrScore(a), d = a.map - a.mapPrev;
+    const ga = goodAdmins(a);
+    document.getElementById('drawer').innerHTML = `
+      <div class="drawer-head">
+        <div class="row">
+          <div><h2 style="font-size:21px">${esc(a.name)}</h2><div class="muted" style="font-size:12.5px">${esc(a.domain)} · renews ${fmtDate(a.end)}</div></div>
+          <button class="close" data-close aria-label="Close account">×</button>
+        </div>
+        <div class="meta">
+          <span class="pill ${a.risk}"><span class="dot"></span>${a.risk} risk</span>
+          <span class="pill ${hb}">Health ${h}</span>
+          <span class="pill ${cadenceLabel(a.cadence)[0]}">${cadenceLabel(a.cadence)[1]}</span>
+          <span class="pill neutral">${a.stage}</span>
+        </div>
+        <div class="actions">
+          <button class="btn primary" data-draft="${a.id}">Draft email to admins</button>
+          <button class="btn" data-copyadmins="${a.id}">Copy admin emails</button>
+          <a class="btn" href="#" data-sf title="Links to the Salesforce opportunity in the real app">Open in Salesforce ↗</a>
+        </div>
+      </div>
+      <div class="drawer-body">
+        <div class="panel">
+          <div class="panel-head"><h3>Renewal brief</h3><span class="src">generated from the data below</span></div>
+          <ul class="brief">${brief(a).map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Admins (${ga.length})</h3><span class="src">BigBrain · account users</span></div>
+          <div class="people">
+            ${a.admins.map(x => {
+              const ok = x[1].endsWith('@' + a.domain);
+              return `<div class="person"><span class="avatar" aria-hidden="true">${x[0].split(/[\s.]/).map(p => p[0]).join('').slice(0,2).toUpperCase()}</span>
+                <div><div class="nm">${esc(x[0])} <span class="muted" style="font-weight:400;font-size:12px">· ${x[2]} · active ${x[3]}</span></div><div class="e">${esc(x[1])}</div>${ok ? '' : '<div class="flag">Not on company domain. Left out of drafts.</div>'}</div>
+                <button class="btn" data-copy="${esc(x[1])}">Copy</button></div>`; }).join('')}
+          </div>
+          ${a.power.length ? `<h3 style="margin-top:6px">Most active users</h3><div class="people">${a.power.map(x => `
+            <div class="person"><span class="avatar" aria-hidden="true">${x[0].split(' ').map(p => p[0]).join('')}</span>
+            <div><div class="nm">${esc(x[0])} <span class="muted" style="font-weight:400;font-size:12px">· ${x[2]}</span></div><div class="e">${esc(x[1])}</div></div>
+            <button class="btn" data-copy="${esc(x[1])}">Copy</button></div>`).join('')}</div>` : ''}
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Usage</h3><span class="src">BigBrain · account daily facts</span></div>
+          <div class="facts">
+            <div class="fact"><div class="l">Monthly active (MAP)</div><div class="v">${a.map}%</div><div class="tr ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)} pts vs last month</div></div>
+            <div class="fact"><div class="l">Weekly active (WAP)</div><div class="v">${a.wap}%</div></div>
+            <div class="fact"><div class="l">Active boards</div><div class="v">${a.boards[0]} / ${a.boards[1]}</div></div>
+            <div class="fact"><div class="l">Automations</div><div class="v">${a.automations}</div></div>
+            <div class="fact"><div class="l">AI credits used</div><div class="v">${a.ai}%</div></div>
+            <div class="fact"><div class="l">Integrations</div><div class="v" style="font-size:13px">${a.integrations.length ? esc(a.integrations.join(', ')) : 'None'}</div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Who else is on this account</h3><span class="src">Salesforce · activities + open opps</span></div>
+          ${a.others.length ? `<ul class="timeline">${a.others.map(o => `<li><span class="when">${o[3]} ago</span><span><span class="own">${o[0]}</span> <strong>${esc(o[1])}</strong> · ${esc(o[2])}</span></li>`).join('')}</ul>`
+            : '<p class="muted" style="margin:0">No AE, AM, CSM or partner activity in the last 90 days.</p>'}
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Renewal business review</h3><span class="src">score from usage + payment type</span></div>
+          <div class="score">${ring(r, r >= 70 ? 'var(--low)' : r >= 45 ? 'var(--med)' : 'var(--high)')}
+            <div><strong>${r >= 70 ? 'Good RBR candidate' : r >= 45 ? 'Possible RBR' : 'Not enough positive signals yet'}</strong>
+            <div class="muted" style="font-size:12.5px">Wire payment, MAP over 50%, 40%+ of boards active, 10+ automations, 20%+ AI credits.</div></div>
+          </div>
+        </div>
+      </div>`;
+  }
+  function openDrawer(id) { state.open = id; renderDrawer(); document.getElementById('drawer').hidden = false; document.getElementById('scrim').hidden = false; document.querySelector('#drawer .close').focus(); }
+  function closeDrawer() { state.open = null; document.getElementById('drawer').hidden = true; document.getElementById('scrim').hidden = true; }
+
+  // ---- Composer
+  const templates = {
+    first: { name: '90-day first outreach', subject: a => `${a.name} · your monday.com renewal on ${fmtDate(a.end)}`,
+      body: (a, me) => `Hi ${firstNames(a)},
+
+I'm ${me}, your renewals manager. Your subscription (${a.plan}, ${a.seats} seats) renews on ${fmtDate(a.end)}, and I'd like to make sure the next term fits how your team works today.
+
+${usageLine(a)}
+
+Could we find 20 minutes in the next two weeks? I can walk you through what's new, answer any questions on pricing, and make the renewal itself painless.
+
+Best,
+${me}` },
+    follow: { name: 'Follow-up (same thread)', subject: a => `Re: ${a.name} · your monday.com renewal on ${fmtDate(a.end)}`,
+      body: (a, me) => `Hi ${firstNames(a)},
+
+Just bringing this back to the top of your inbox. Your renewal is ${a.end} days away (${fmtDate(a.end)}).
+
+If it's easier, reply with a time that suits you, or let me know who else I should speak to.
+
+Best,
+${me}` },
+    risk: { name: 'High-risk check-in', subject: a => `Getting more out of monday.com at ${a.name}`,
+      body: (a, me) => `Hi ${firstNames(a)},
+
+Ahead of your renewal on ${fmtDate(a.end)}, I took a look at how the team is using the account. ${a.boards[0]} of ${a.boards[1]} boards were active this month and ${a.automations} automations are running.
+
+I'd love to understand what's working and what isn't, so we can set the next term up properly. Are you open to a short call this week?
+
+Best,
+${me}` },
+  };
+  const firstNames = a => { const n = goodAdmins(a).map(x => x[0].split(' ')[0]); return n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n.at(-1) : (n[0] || 'there'); };
+  const usageLine = a => a.map - a.mapPrev >= 0
+    ? `It's good to see ${a.map}% of your seats active this month, with ${a.automations} automations doing work in the background.`
+    : `I noticed fewer people logged in this month (${a.map}% of seats), so it may be a good moment to check the setup still matches your workflows.`;
+  const pickTpl = a => a.cadence.state === 'followup' || a.cadence.state === 'sent' ? 'follow' : a.risk === 'High' ? 'risk' : 'first';
+
+  function openComposer(ids) {
+    if (!ids.length) { toast('Select at least one account first.'); return; }
+    state.comp = { ids, i: 0, drafts: {} };
+    ids.forEach(id => { const a = accounts.find(x => x.id === id); const t = pickTpl(a);
+      state.comp.drafts[id] = { tpl: t, to: goodAdmins(a).map(x => x[1]).concat(goodAdmins(a).length < 3 ? a.power.map(x => x[1]) : []), off: new Set(), subject: templates[t].subject(a), body: templates[t].body(a, 'Dana Levi'), done: false }; });
+    closeDrawer();
+    document.getElementById('composer').hidden = false;
+    renderComposer();
+  }
+  function renderComposer() {
+    const c = state.comp, id = c.ids[c.i], a = accounts.find(x => x.id === id), d = c.drafts[id];
+    document.getElementById('composerTitle').textContent = `Outreach drafts · ${c.ids.filter(x => c.drafts[x].done).length} of ${c.ids.length} sent`;
+    document.getElementById('tpl').innerHTML = Object.entries(templates).map(([k, t]) => `<option value="${k}" ${d.tpl === k ? 'selected' : ''}>${t.name}</option>`).join('');
+    document.getElementById('queue').innerHTML = c.ids.map((x, i) => { const aa = accounts.find(y => y.id === x), dd = c.drafts[x];
+      return `<button data-q="${i}" aria-current="${i === c.i}"><span class="qn"><span>${esc(aa.name)}</span>${dd.done ? '<span class="pill ok">Sent</span>' : ''}</span>
+        <span class="qs">${templates[dd.tpl].name} · ${dd.to.length - dd.off.size} recipients · ${aa.end}d</span></button>`; }).join('');
+    const to = d.to.filter(e => !d.off.has(e));
+    const sfNote = `${new Date().toLocaleDateString('en-GB')} · ${templates[d.tpl].name} emailed to ${to.join(', ')}. Next step: follow up in 14 days if no reply.`;
+    document.getElementById('editor').innerHTML = `
+      <div class="panel-head"><h2>${esc(a.name)}</h2><span class="muted">${money(a.arr)} · ${a.risk} risk · renews ${fmtDate(a.end)}</span></div>
+      <div class="field"><span class="lab">To (all admins on one thread, so one reply covers everyone)</span>
+        <div class="recips">${d.to.map(e => `<span class="recip ${d.off.has(e) ? 'off' : ''}">${esc(e)}<button data-toggle="${esc(e)}" aria-label="${d.off.has(e) ? 'Include' : 'Remove'} ${esc(e)}">${d.off.has(e) ? '+' : '×'}</button></span>`).join('')}</div>
+        ${goodAdmins(a).length < 3 && a.power.length ? '<span class="hint">Most active users were added because the account has fewer than three admins.</span>' : ''}
+      </div>
+      <div class="field"><label for="subj">Subject</label><input type="text" id="subj" value="${esc(d.subject)}"></div>
+      <div class="field"><label for="body">Message</label><textarea id="body">${esc(d.body)}</textarea></div>
+      <div class="actions">
+        <a class="btn primary" id="gmail" target="_blank" rel="noopener" href="${gmailUrl(to, d.subject, d.body)}">Open as Gmail draft ↗</a>
+        <button class="btn" id="copyMail">Copy email</button>
+        <button class="btn" id="markSent">${d.done ? 'Sent' : 'Mark as sent'}</button>
+        <button class="btn ghost" id="next" ${c.i >= c.ids.length - 1 ? 'disabled' : ''}>Next account →</button>
+      </div>
+      <div class="field"><span class="lab">Salesforce renewal comment (paste until write access is available)</span>
+        <div class="sfnote" id="sfnote">${esc(sfNote)}</div>
+        <div><button class="btn" id="copySf">Copy Salesforce note</button></div>
+      </div>`;
+    const sync = () => { d.subject = document.getElementById('subj').value; d.body = document.getElementById('body').value;
+      document.getElementById('gmail').href = gmailUrl(d.to.filter(e => !d.off.has(e)), d.subject, d.body); };
+    document.getElementById('subj').oninput = sync;
+    document.getElementById('body').oninput = sync;
+    document.getElementById('copyMail').onclick = () => copy(`To: ${to.join(', ')}\nSubject: ${d.subject}\n\n${d.body}`, 'Email copied');
+    document.getElementById('copySf').onclick = () => copy(sfNote, 'Salesforce note copied');
+    document.getElementById('markSent').onclick = () => { d.done = true;
+      a.cadence = { state: 'sent', last: 0, touches: a.cadence.touches + 1 };
+      if (a.stage === 'Pre-renewal') a.stage = 'Renewal kickoff';
+      toast('Marked as sent. Paste the Salesforce note to log it.');
+      if (c.i < c.ids.length - 1) c.i++;
+      renderComposer(); renderAll(); };
+    document.getElementById('next').onclick = () => { c.i++; renderComposer(); };
+  }
+  const gmailUrl = (to, su, body) => `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to.join(','))}&su=${encodeURIComponent(su)}&body=${encodeURIComponent(body)}`;
+
+  // ---- Helpers
+  let tt;
+  function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2600); }
+  function copy(text, msg) {
+    const done = () => toast(msg || 'Copied');
+    try { navigator.clipboard.writeText(text).then(done, () => fallback(text, done)); } catch (e) { fallback(text, done); }
+  }
+  function fallback(text, done) {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('Select the text and copy it manually.'); }
+    ta.remove();
+  }
+
+  // ---- Events
+  document.addEventListener('click', e => {
+    const t = e.target;
+    const f = t.closest('[data-filter]'); if (f) { state.filter = f.dataset.filter; renderChips(); renderRows(); return; }
+    if (t.matches('[data-sel]')) { const id = +t.dataset.sel; t.checked ? state.selected.add(id) : state.selected.delete(id); renderRows(); return; }
+    if (t.closest('[data-close]') || t.id === 'scrim') { closeDrawer(); return; }
+    const dr = t.closest('[data-draft]'); if (dr) { openComposer([+dr.dataset.draft]); return; }
+    const ca = t.closest('[data-copyadmins]'); if (ca) { const a = accounts.find(x => x.id === +ca.dataset.copyadmins); copy(goodAdmins(a).map(x => x[1]).join(', '), `${goodAdmins(a).length} admin emails copied`); return; }
+    const cp = t.closest('[data-copy]'); if (cp) { copy(cp.dataset.copy, 'Email copied'); return; }
+    if (t.closest('[data-sf]')) { e.preventDefault(); toast('In the live app this opens the Salesforce opportunity.'); return; }
+    const q = t.closest('[data-q]'); if (q) { state.comp.i = +q.dataset.q; renderComposer(); return; }
+    const tg = t.closest('[data-toggle]'); if (tg) { const d = state.comp.drafts[state.comp.ids[state.comp.i]]; const v = tg.dataset.toggle; d.off.has(v) ? d.off.delete(v) : d.off.add(v); renderComposer(); return; }
+    const o = t.closest('[data-open]'); if (o && !t.matches('input')) { openDrawer(+o.dataset.open); }
+  });
+  document.getElementById('selAll').onchange = e => { visible().forEach(a => e.target.checked ? state.selected.add(a.id) : state.selected.delete(a.id)); renderRows(); };
+  document.getElementById('search').oninput = e => { state.q = e.target.value; renderRows(); };
+  document.getElementById('bulkClear').onclick = () => { state.selected.clear(); renderRows(); };
+  document.getElementById('bulkDraft').onclick = () => openComposer([...state.selected].sort((x, y) => accounts.find(a => a.id === x).end - accounts.find(a => a.id === y).end));
+  document.getElementById('bulkCopy').onclick = () => { const em = [...state.selected].flatMap(id => goodAdmins(accounts.find(a => a.id === id)).map(x => x[1])); copy(em.join(', '), `${em.length} admin emails copied`); };
+  document.getElementById('startOutreach').onclick = () => openComposer(dueToday());
+  document.getElementById('composerClose').onclick = () => { document.getElementById('composer').hidden = true; state.comp = null; };
+  document.getElementById('tpl').onchange = e => { const c = state.comp, a = accounts.find(x => x.id === c.ids[c.i]), d = c.drafts[a.id];
+    d.tpl = e.target.value; d.subject = templates[d.tpl].subject(a); d.body = templates[d.tpl].body(a, 'Dana Levi'); renderComposer(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!document.getElementById('composer').hidden) document.getElementById('composerClose').click(); else closeDrawer(); } });
+
+  const hr = new Date().getHours();
+  document.getElementById('hello').textContent = `${hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening'}, Dana`;
+  renderAll();
+})();
+</script>
